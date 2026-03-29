@@ -15,7 +15,6 @@ def chat(user_input):
     for msg in messages:
         print(f"{msg['role']}: {msg['content']}")
 
-
     response = client.chat.completions.create(model="gpt-4o-mini",messages=messages)
     reply = response.choices[0].message.content
 
@@ -35,3 +34,4 @@ chat("What is my name?")  # should remember ✅
 chat("Where do I live?")  # should remember ✅
 chat("What am I learning?")  # should remember ✅
 chat("What language do I like?")  # should remember ✅
+chat("do I live in bangalore?")  # should remember ✅
