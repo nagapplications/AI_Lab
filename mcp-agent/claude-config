@@ -1,0 +1,17 @@
+PRE-REQUISITES :
+---> Install claude desktop app from https://claude.ai/desktop
+--> Add below config in /Users/nagarjunamaddi/Library/Application Support/Claude/claude_desktop_config.json
+--> Restart the claude desktop app and you should see "my-first-mcp" server in the list of connectors
+
+"mcpServers": {
+    "my-first-mcp": {
+      "command": "/Users/nagarjunamaddi/PycharmProjects/AI_Lab/.venv/bin/python3",
+      "args": [
+        "/Users/nagarjunamaddi/PycharmProjects/AI_Lab/mcp-agent/my_mcp_server.py"
+      ],
+      "env": {
+        "TAVILY_API_KEY": "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",
+        "OPENAI_API_KEY": "sk-proj-xxxxxxxxx"
+      }
+    }
+  }
