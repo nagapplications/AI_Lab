@@ -2,3 +2,5 @@ mcp
 python-dotenv
 openai
 tavily
+langgraph
+langchain_openai
