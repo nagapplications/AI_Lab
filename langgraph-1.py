@@ -49,6 +49,15 @@ def llm_node(state: State) -> State:
     return {"messages": [response]}
 
 tool_map = {t.name: t for t in tools}
+
+def safe_invoke(tool_name, tool_args):
+    if tool_name not in tool_map:
+        return f"Error: Unknown tool '{tool_name}'"
+    try:
+        return tool_map[tool_name].invoke(tool_args)
+    except Exception as e:
+        return f"Tool Error: {str(e)}"
+
 def tools_node(state: State) -> State:
     print("\n⚡ Tools Node executing...")
     last_message = state["messages"][-1]  # get LLM's last response
@@ -58,7 +67,8 @@ def tools_node(state: State) -> State:
         tool_name = tool_call["name"]
         tool_args = tool_call["args"]
         print(f"  🔧 Calling: {tool_name} → {tool_args}")
-        result = tool_map[tool_name].invoke(tool_args)
+        result = safe_invoke(tool_name, tool_args)
+        #result = tool_map[tool_name].invoke(tool_args)
         print(f"  📦 Result: {result}")
         results.append(ToolMessage(content=str(result),tool_call_id=tool_call["id"]))
 
