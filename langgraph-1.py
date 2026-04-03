@@ -35,6 +35,14 @@ llm_with_tools = llm.bind_tools(tools)
 class State(TypedDict):
     messages: Annotated[list, add_messages]
 
+def planner_node(state: State) -> State:
+    print("\n🧭 Planner Node thinking...")
+    prompt = [
+        HumanMessage(content="Break this task into steps:\n" + state["messages"][-1].content)
+    ]
+    response = llm.invoke(prompt)
+    return {"messages": [response]}
+
 def llm_node(state: State) -> State:
     print("\n🧠 LLM Node thinking...")
     response = llm_with_tools.invoke(state["messages"])
@@ -66,10 +74,12 @@ def should_continue(state: State) -> str:
 # -----------------------------------------------------------
 # BUILD THE GRAPH
 graph_builder = StateGraph(State)
+graph_builder.add_node("planner_node", planner_node)
 graph_builder.add_node("llm", llm_node)
 graph_builder.add_node("tools", tools_node)
 
-graph_builder.add_edge(START, "llm")
+graph_builder.add_edge(START, "planner_node")
+graph_builder.add_edge("planner_node", "llm")
 graph_builder.add_conditional_edges("llm",should_continue,{"tools": "tools","end": END})
 graph_builder.add_edge("tools", "llm")
 
@@ -86,4 +96,4 @@ def run(user_input: str):
     print(f"\n✅ Final Answer: {final_answer}")
 # -----------------------------------------------------------
 
-run("What is the weather in Tokyo, and calculate how many degrees it is away from 50°C")
+run("What is the weather in Tokyo, and calculate how many degrees it is away from 50°C and also calculate result + 10?")
