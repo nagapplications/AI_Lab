@@ -44,12 +44,11 @@ def planner_node(state: State) -> State:
     return {"messages": [response]}
 
 def llm_node(state: State) -> State:
-    print("\n🧠 LLM Node thinking...")
+    print("\n🧠 LLM Node acting...")
     response = llm_with_tools.invoke(state["messages"])
     return {"messages": [response]}
 
 tool_map = {t.name: t for t in tools}
-
 def safe_invoke(tool_name, tool_args):
     if tool_name not in tool_map:
         return f"Error: Unknown tool '{tool_name}'"
