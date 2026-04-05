@@ -16,7 +16,7 @@ from setup.config import OPENAI_API_KEY
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../setup/.env"))
 
-# --------------------- DEFUBE TOOLS, REGISTER THEM IN REGISTRY & BIND TO LLM--------------------------------------
+# --------------------- DEFINE TOOLS, REGISTER THEM IN REGISTRY & BIND TO LLM--------------------------------------
 TOOL_REGISTRY: Dict[str, Callable] = {}
 def register_tool(tool_func):
     """Decorator to register a tool in the registry."""
@@ -42,7 +42,7 @@ tools = list(TOOL_REGISTRY.values())
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=OPENAI_API_KEY)
 llm_with_tools = llm.bind_tools(tools)
 
-# --------------------- DEFUBE STAGE OBJECT --------------------------------------
+# --------------------- DEFINE STATE OBJECT --------------------------------------
 class State(TypedDict):
     messages: Annotated[list, add_messages]  # existing (keep this)
     plan: list[Dict[str, Any]]  # structured steps from planner
