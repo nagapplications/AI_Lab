@@ -83,6 +83,34 @@ def planner_node(state: State) -> State:
         "last_result": ""
     }
 
+def llm_node(state: State) -> State:
+    print("\n🧠 LLM Node acting...")
+    response = llm_with_tools.invoke(state["messages"])
+    return {"messages": [response]}
+
+def tools_node(state: State) -> State:
+    print("\n⚡ Tools Node executing...")
+    last_message = state["messages"][-1]  # The latest message determines the next action
+    results = []
+
+    for tool_call in last_message.tool_calls:
+        tool_name = tool_call["name"]
+        tool_args = tool_call["args"]
+        print(f"  🔧 Calling: {tool_name} → {tool_args}")
+        result = safe_invoke(tool_name, tool_args)
+        print(f"  📦 Result: {result}")
+        results.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
+
+    return {"messages": results}
+
+def should_continue(state: State) -> str:
+    last_message = state["messages"][-1]
+    if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+        return "tools"
+    else:
+        return "end"
+
+# --------------------- UTIL FUNCTIONS --------------------------------------
 def convertToJson(response: AIMessage) -> Any:
     # Parse JSON safely
     cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", response.content.strip(), flags=re.MULTILINE)
@@ -98,11 +126,6 @@ def convertToJson(response: AIMessage) -> Any:
             step["args"] = {}
     return plan_json
 
-def llm_node(state: State) -> State:
-    print("\n🧠 LLM Node acting...")
-    response = llm_with_tools.invoke(state["messages"])
-    return {"messages": [response]}
-
 tool_map = {t.name: t for t in tools}
 def safe_invoke(tool_name, tool_args):
     if tool_name not in tool_map:
@@ -111,29 +134,6 @@ def safe_invoke(tool_name, tool_args):
         return tool_map[tool_name].invoke(tool_args)
     except Exception as e:
         return f"Tool Error: {str(e)}"
-
-def tools_node(state: State) -> State:
-    print("\n⚡ Tools Node executing...")
-    last_message = state["messages"][-1]  # The latest message determines the next action
-    results = []
-
-    for tool_call in last_message.tool_calls:
-        tool_name = tool_call["name"]
-        tool_args = tool_call["args"]
-        print(f"  🔧 Calling: {tool_name} → {tool_args}")
-        result = safe_invoke(tool_name, tool_args)
-        # result = tool_map[tool_name].invoke(tool_args)
-        print(f"  📦 Result: {result}")
-        results.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
-
-    return {"messages": results}
-
-def should_continue(state: State) -> str:
-    last_message = state["messages"][-1]
-    if hasattr(last_message, "tool_calls") and last_message.tool_calls:
-        return "tools"
-    else:
-        return "end"
 
 # --------------------- BUILD GRAPH & COMPILE --------------------------------------
 graph_builder = StateGraph(State)
