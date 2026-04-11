@@ -38,7 +38,7 @@ query = "does paris weather unchanged?"
 answer = qa_chain.invoke(query)
 print(answer['result'])
 
-# ------- DUMMY -------------
+# ------- DUMMY Ignore -------------
 # print(f"Total chunks: {len(docs)}\n")
 # for i, doc in enumerate(docs):
 #     print(f"Chunk {i}: {doc.page_content}")
