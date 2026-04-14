@@ -3,9 +3,6 @@ import os
 import sys
 
 from langchain_classic.chains.retrieval_qa.base import RetrievalQA
-
-logging.getLogger("pypdf").setLevel(logging.ERROR)
-
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -13,6 +10,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from setup.config import OPENAI_API_KEY
+
+logging.getLogger("pypdf").setLevel(logging.ERROR)
 
 # ---------- Step 1: Load PDF ------------------------
 loader = PyPDFLoader("Anthropic_Certification_Terms_and_Conditions.pdf")
