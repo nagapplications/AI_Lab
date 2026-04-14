@@ -3,7 +3,7 @@ import os
 import sys
 
 from langchain_classic.chains.retrieval_qa.base import RetrievalQA
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -13,8 +13,8 @@ from setup.config import OPENAI_API_KEY
 
 logging.getLogger("pypdf").setLevel(logging.ERROR)
 
-# ---------- Step 1: Load PDF ------------------------
-loader = PyPDFLoader("Anthropic_Certification_Terms_and_Conditions.pdf")
+# ---------- Step 1: Load files ------------------------
+loader = PyPDFDirectoryLoader("files/")
 documents = loader.load()
 
 # ---------- Step 2: Split into chunks ---------------
@@ -24,11 +24,22 @@ text_splitter = RecursiveCharacterTextSplitter(
     separators=["\n\n", "\n", ". ", " "]
 )
 docs = text_splitter.split_documents(documents)
-docs = [doc for doc in docs if len(doc.page_content.strip()) > 30]
 
 # ---------- Step 3: Create vectorstore -------------
 embeddings = OpenAIEmbeddings(api_key=OPENAI_API_KEY)
-vectorstore = FAISS.from_documents(docs, embeddings)
+FAISS_INDEX_PATH = "faiss_index"
+if os.path.exists(FAISS_INDEX_PATH):
+    print("Loading existing vectorstore from disk...")
+    vectorstore = FAISS.load_local(
+        FAISS_INDEX_PATH,
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
+else:
+    print("Building vectorstore for first time...")
+    vectorstore = FAISS.from_documents(docs, embeddings)
+    vectorstore.save_local(FAISS_INDEX_PATH)  # ← saves to disk
+    print(f"Vectorstore saved to '{FAISS_INDEX_PATH}' folder")
 
 # ---------- Step 4: QA Chain -----------------------
 llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4")
@@ -39,7 +50,7 @@ qa_chain = RetrievalQA.from_chain_type(
 )
 
 # ---------- Step 5: Terminal Loop ------------------
-print("\n📄 PDF loaded and ready!")
+print("\n📄 Files loaded and ready!")
 print("Type your question below. Type 'exit' to quit.\n")
 
 while True:
