@@ -3,7 +3,7 @@ import os
 import sys
 
 from langchain_classic.chains.retrieval_qa.base import RetrievalQA
-from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -14,13 +14,17 @@ from setup.config import OPENAI_API_KEY
 logging.getLogger("pypdf").setLevel(logging.ERROR)
 
 # ---------- Step 1: Load files ------------------------
-loader = PyPDFDirectoryLoader("files/")
-documents = loader.load()
+documents = []
+pdf_loader = PyPDFLoader("files/short-stories-for-children.pdf")
+documents.extend(pdf_loader.load())
+txt_loader = TextLoader("files/data.txt")
+documents.extend(txt_loader.load())
 
+print(f"\nTotal pages/sections loaded: {len(documents)}")
 # ---------- Step 2: Split into chunks ---------------
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=50,
+    chunk_size=1000,
+    chunk_overlap=100,
     separators=["\n\n", "\n", ". ", " "]
 )
 docs = text_splitter.split_documents(documents)
@@ -69,9 +73,10 @@ while True:
 
     print("\nSOURCES:")
     for i, doc in enumerate(answer['source_documents']):
-        page = doc.metadata.get('page', 'N/A')
-        page = page + 1 if isinstance(page, int) else page
-        print(f"[Chunk {i + 1}] Page {page} \n {doc.page_content}")
-    print("-" * 50 + "\n")
+        source = os.path.basename(doc.metadata.get('source', 'Unknown'))  # ← filename
+        page = doc.metadata.get('page', None)
+        page_display = f"Page {page + 1}" if page is not None else "N/A"
+        print(f"\n[Chunk {i + 1}] 📄 {source} — {page_display}")  # ← added source
+        print(f"  {doc.page_content}")
 
 # Note : FAISS does similarity search, not page order search. It returns chunks ranked by relevance to your query — not by their position in the document:
